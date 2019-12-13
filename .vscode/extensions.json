@@ -1,0 +1,10 @@
+{
+	"recommendations": [
+		"dbaeumer.vscode-eslint",
+        "msjsdiag.debugger-for-chrome",
+        "esbenp.prettier-vscode",
+		"eamodio.gitlens",
+		"jpoissonnier.vscode-styled-components",
+		"shinnn.stylelint"
+	]
+}
