@@ -12,7 +12,7 @@ class App extends React.Component <any, any>{
   constructor(props: any){
     super(props);
     this.state ={
-      speed: 10
+      speed: -1
     }
   }
 
