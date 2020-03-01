@@ -1,25 +1,38 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
+admin.initializeApp();
 
 //Sanity Check
-exports.test = functions.https.onRequest( (request, response) => {
+exports.test = functions.https.onRequest((request, response) => {
     response.send("Hello Jeremy's Firebase API");
    });
 
-const express = require('express');
-const cors = require('cors');
-const app = express();
-app.use(cors({ origin: true })); // Automatically allow cross-origin requests
+const writeToRealTimeDB = (queryRecieved) => {
 
-admin.initializeApp();
+}
 
-//CRUD interface
-app.get('/:updatetank', (req, res) => {
-    res.send(JSON.stringify(req.params));
-});
+exports.updatetank = functions.https.onRequest((request, response) => {
+    const keysToCheck=["lowLvl", "medLvl", "highLvl", "lastNetwrkTimeMeas", "tankComSuc", "errorLvls", "emergLvls", "warnLvls", "tankLvlsOk", "lastEppochTime"];
+    const queryRecieved = request.query;
+    let allKeysRecieved = true;
+    let keyMissing = '';
 
-// Expose Express API as a single Cloud Function:
-exports.api = functions.https.onRequest(app);
+    if(Object.entries(queryRecieved).length !== 0) {
+        keysToCheck.forEach(key => {
+            if(!queryRecieved.hasOwnProperty(key)) {
+                allKeysRecieved = false;
+                keyMissing = keyMissing + `${key} ,`;
+            }
+        });                
+        if(allKeysRecieved) {
+            writeToRealTimeDB(queryRecieved);
+            response.send(`All keys recieved ${JSON.stringify(queryRecieved)}`);
+        } else {
+            response.send(`Not all keys recieved (${keyMissing}) ${JSON.stringify(queryRecieved)}`);
+        }
+    } else {
+       response.send(`No keys recieved ${JSON.stringify(queryRecieved)}`); 
+    } 
+   });
+
+ 
