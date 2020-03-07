@@ -37,7 +37,7 @@ exports.updatetank = functions.https.onRequest((request, response) => {
 
                 admin.database().ref(`/records`).push(queryRecieved);
 
-                if(count >= 5000) { //Later change to ~500
+                if(count >= 1000) { //Later change to ~5000
                     admin.database().ref('/records').orderByKey().limitToFirst(1).once("value").then((snap)=>{
                         admin.database().ref(`/records`).child(Object.keys(snap.exportVal())[0]).remove(); 
                         return;
