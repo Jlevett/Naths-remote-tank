@@ -19,26 +19,30 @@ exports.updatetank = functions.https.onRequest((request, response) => {
         keysToCheck.forEach(key => {
             if(!queryRecieved.hasOwnProperty(key)) {
                 allKeysRecieved = false;
-                keyMissing = keyMisscing + `${key} ,`;
+                keyMissing = keyMissing + `${key} ,`;
             }
         });                
         if(allKeysRecieved) {
             const { tankComSuc } = queryRecieved;
+
             if(tankComSuc === '1') {
-                admin.database().ref(`/lastsuccessful`).set(queryRecieved); 
+                admin.database().ref(`/lastSuccessful`).set(queryRecieved); 
             }  
-            admin.database().ref(`/storage`).once("value").then((snapshot) => {
+
+            admin.database().ref(`/lastUpdate`).set(queryRecieved);
+
+            admin.database().ref(`/records`).once("value").then((snapshot) => {
                 var count = snapshot.numChildren();
-                admin.database().ref(`/storage`).push(queryRecieved);
-                admin.database().ref(`/count`).set(count);
-                if(count >= 5) { //Later change to ~500
-                        admin.database().ref('/storage').orderByKey().limitToFirst(1).once("value").then((snap)=>{
-                        admin.database().ref(`/random`).push(snap.exportVal()); 
-                        admin.database().ref(`/storage`).child(Object.keys(snap.exportVal())[0]).remove(); 
+                admin.database().ref(`/recordsTotal`).set(count);
+
+                admin.database().ref(`/records`).push(queryRecieved);
+
+                if(count >= 5000) { //Later change to ~500
+                    admin.database().ref('/records').orderByKey().limitToFirst(1).once("value").then((snap)=>{
+                        admin.database().ref(`/records`).child(Object.keys(snap.exportVal())[0]).remove(); 
                         return;
                     }).catch(()=>{return;});
-                    // admin.database().ref(`/storage`).child("-M1jZ_k3g-WuoHlKVR9U").remove()
-               }
+                }
                 return;
               }).catch(()=>{return;});
             response.send(`All keys recieved ${JSON.stringify(queryRecieved)}`);
