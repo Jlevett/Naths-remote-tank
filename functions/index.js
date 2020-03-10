@@ -32,10 +32,11 @@ exports.updatetank = functions.https.onRequest((request, response) => {
             admin.database().ref(`/lastUpdate`).set(queryRecieved);
 
             admin.database().ref(`/records`).once("value").then((snapshot) => {
+  
+                admin.database().ref(`/records`).push(queryRecieved);
+
                 var count = snapshot.numChildren();
                 admin.database().ref(`/recordsTotal`).set(count);
-
-                admin.database().ref(`/records`).push(queryRecieved);
 
                 if(count >= 1000) { //Later change to ~5000
                     admin.database().ref('/records').orderByKey().limitToFirst(1).once("value").then((snap)=>{
