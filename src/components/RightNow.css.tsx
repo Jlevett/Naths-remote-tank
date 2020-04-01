@@ -33,6 +33,7 @@ export const background = css`
 `;
 
 export const container = css`
+    max-width: 1200px;
     margin-right: auto;
     margin-left: auto;
 `;
