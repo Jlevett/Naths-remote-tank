@@ -75,12 +75,11 @@ class RightNow extends React.Component <any, any>{
       warnLvls,
       tankLvlsOk, 
       lastEppochTime, 
-      lastUpdate_lastNetwrkTimeMeas, 
+      lastUpdate_lastNetwrkTimeMeas,
       lastUpdate_tankComSuc,
       lastUpdate_lastEppochTime
-    
-    
     } = this.state;
+    
     const lastUpdateFromNow = moment(lastUpdate_lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").fromNow();
     const lastUpdateDateTime = moment(lastUpdate_lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a');
     const lastBaseToTankSuccessFromNow = moment(lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").fromNow();

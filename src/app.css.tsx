@@ -1,5 +1,5 @@
 import { css } from'@emotion/core';
-export const sticky = css`
+export const fixed = css`
   position: fixed;
   bottom: 0;
   left: 0;
