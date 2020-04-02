@@ -7,6 +7,7 @@ export const fixed = css`
 `;
 
 export const left = css`
+    cursor: pointer;
     font-size:20px;
     width:50%;
     border-width: 1px;
@@ -20,7 +21,7 @@ export const left = css`
 `;
 
 export const right = css`
-
+    cursor: pointer;
     font-size:20px;
     width:50%;
     border-width: 1px;

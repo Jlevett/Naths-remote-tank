@@ -80,10 +80,10 @@ class RightNow extends React.Component <any, any>{
       lastUpdate_lastEppochTime
     } = this.state;
     
-    const lastUpdateFromNow = moment(lastUpdate_lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").fromNow();
-    const lastUpdateDateTime = moment(lastUpdate_lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a');
-    const lastBaseToTankSuccessFromNow = moment(lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").fromNow();
-    const lastBaseToTankSuccessDateTime = moment(lastNetwrkTimeMeas, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a');
+    const lastUpdateFromNow = moment(lastUpdate_lastNetwrkTimeMeas, "YY-MM-DD-HH-mm-ss").fromNow();
+    const lastUpdateDateTime = moment(lastUpdate_lastNetwrkTimeMeas, "YY-MM-DD-HH-mm-ss").format('MMMM Do, h:mm a');
+    const lastBaseToTankSuccessFromNow = moment(lastNetwrkTimeMeas, "YY-MM-DD-HH-mm-ss").fromNow();
+    const lastBaseToTankSuccessDateTime = moment(lastNetwrkTimeMeas, "YY-MM-DD-HH-mm-ss").format('MMMM Do, h:mm a');
 
     const hasItBeenToLong = (updateFromNow: string, where: string) => {
         const commsMessage = `Its been detected that the ${where} update has been a while, this might be due to bad weather (in which case, it might resolve) or a malfunction (which wont resolve, especially if its been a week) requiring a power reset of both modules.`;
@@ -113,7 +113,7 @@ class RightNow extends React.Component <any, any>{
         <div css={Styles.width}>
         <p css={Styles.inline}><b>Status:</b></p>{getCurrentStatus()}<p css={Styles.inline}>{lastBaseToTankSuccessFromNow}</p>
         <p>{`This was on ${lastBaseToTankSuccessDateTime}`}</p>
-        <p>Note: Tank to base station communications are scheduled every 30 minutes.</p>
+        <p>Note: Tank to base station communications are scheduled every 37 minutes.</p>
         {hasItBeenToLong(lastBaseToTankSuccessFromNow, "tank to base station")}
         {(emergLvls == 1 || warnLvls == 1 || errorLvls == 1) && (
           <div css={[Styles.bordersContainer, Styles.red]}>

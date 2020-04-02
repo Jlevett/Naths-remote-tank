@@ -1,13 +1,13 @@
 /** @jsx jsx */
 import {jsx } from '@emotion/core';
 import * as firebase from 'firebase';
+import moment from 'moment';
 import React from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Brush
 } from 'recharts';
-import data from './graphMockData';
+// import mockData from './graphMockData';
 import * as Styles from './Graph.css';
-import moment from 'moment';
 
 function isOnClient(): boolean {
   return !!(typeof window !== 'undefined' && window.document && window.document.createElement);
@@ -23,6 +23,7 @@ export default class Graph extends React.Component <any, any>  {
       data:[]
     };
     this.resize = this.resize.bind(this);
+    this.addInNoUploadComCheck = this.addInNoUploadComCheck.bind(this);
   }
   
   resize() {
@@ -35,87 +36,121 @@ export default class Graph extends React.Component <any, any>  {
     this.resize();
     window.addEventListener('resize',this.resize);
 
-    // const rootRef = firebase.database().ref().child('records');
+    const rootRef = firebase.database().ref().child('records');
 
-    // rootRef.on('value', (snap) => {
-    //   const records = snap.val();
-    //   const newRecords = this.processNewRecords(records);
-    //   this.setState({data:newRecords});
-    // });
+    rootRef.on('value', (snap) => {
+      const records = snap.val();
+      const newRecords = this.processNewRecords(records);
+      this.setState({data:this.addInNoUploadComCheck(newRecords)});
+    });
+  
+    // this.setState({data: this.addInNoUploadComCheck(mockData)}): For mock tests
   }
 
+  processNewRecords = (records: any) => {
+    let newRecords = [];
+    for(var key in records){
+      newRecords.push(records[key]);
+    }
+    newRecords = newRecords.map(obj => {
+      for (const property in obj) {
+        if(property === "lastNetwrkTimeMeas") {
+          continue;
+        }
+        obj[property] = Number(obj[property]);
+      }
+      return obj;
+    });
 
-  // processNewRecords = (records: any) => {
-  //   let newRecords = [];
-  //   for(var key in records){
-  //     newRecords.push(records[key]);
-  //   }
-  //   newRecords = newRecords.map(obj => {
-  //     for (const property in obj) {
-  //       if(property === "lastNetwrkTimeMeas") {
-  //         continue;
-  //       }
-  //       obj[property] = Number(obj[property]);
-  //     }
-  //     return obj;
-  //   });
-
-  //   return newRecords;
-  // }
-
+    return newRecords;
+  }
 
   componentWillUnmount(){
     window.removeEventListener('resize',this.resize);
   }
   
+
+  addInNoUploadComCheck (freshData: any) {
+    const newRecord = [];
+
+    const timeOutRecord = 2400; // 40 minutes on 37 minute cycles
+    const addTimeNewRecords = 37; // minutes
+    const newNetworkTime = (networkTime: string, no: number) => moment(networkTime, "YY-MM-DD-HH-mm-ss").add((no * addTimeNewRecords), 'minutes').format("YY-MM-DD-HH-mm-ss");
+
+    for(let i = 0; i < freshData.length; i++) {
+      if(freshData[i].tankComSuc === 1){
+        const tempObj = Object.assign({},freshData[i]);
+        delete tempObj.tankComSuc;
+        newRecord.push(tempObj);
+      }
+      else if(freshData[i].tankComSuc == 0){
+        newRecord.push({tankComSuc: 0, lastNetwrkTimeMeas: freshData[i].lastNetwrkTimeMeas})
+      }     
+
+      if(i + 1 !== freshData.length){
+        const recordsDiff = (freshData[i+1].lastEppochTime - freshData[i].lastEppochTime) 
+        if(recordsDiff > timeOutRecord){
+          const missingDataNo =  Math.floor(recordsDiff / timeOutRecord);
+          for(let j = 1; j <= missingDataNo; j++) {
+            newRecord.push({internetSuc: 0, lastNetwrkTimeMeas: newNetworkTime(freshData[i].lastNetwrkTimeMeas, j)})
+          }
+        }
+      } else {
+        const lastRecordAndNow  = moment().diff( moment(freshData[i].lastNetwrkTimeMeas, "YY-MM-DD-HH-mm-ss"), 'seconds');
+        if(lastRecordAndNow > timeOutRecord){
+          const missingDataNo =  Math.floor(lastRecordAndNow / (addTimeNewRecords*60));
+          for(let j = 1; j <= missingDataNo; j++) {
+            newRecord.push({internetSuc: 0, lastNetwrkTimeMeas: newNetworkTime(freshData[i].lastNetwrkTimeMeas, j)})
+          }
+        }
+      }
+    }
+    return newRecord;
+  }
+
   render() {
-    const dataForm = data;
-    // const dataForm = this.state.data;
     return (
       <div css={Styles.space}>
         <h1 css={Styles.middle}>Historic Graphs</h1>
-
         <h4 css={Styles.middle}>Tank Status</h4>
         <LineChart
           width={this.state.width}
           height={200}
-          data={dataForm}
+          data={this.state.data}
           syncId="anyId"
-          margin={{
-            top: 10, right: 30, left: 0, bottom: 0,
-          }}
+          margin={{ top: 10, right: 90, left: 30, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="lastNetwrkTimeMeas"  tickFormatter={ e => moment(e, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a')}/>
+          <XAxis dataKey="lastNetwrkTimeMeas"  tickFormatter={ e => moment(e, "YY-MM-DD-HH-mm-ss").format('MMMM Do, h:mm a')}/>
           <YAxis type="number" domain={[-1,1]}  allowDecimals={false}/>
-          <Tooltip labelFormatter={ e => moment(e, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a')}/>
-          <Line type="monotone" dataKey="errorLvls" stroke="#6a0dad" fill="#6a0dad" dot={<CustomizedDotBad color="#6a0dad"/>} />
+          <Tooltip labelFormatter={ e => moment(e, "YY-MM-DD-HH-mm-ss").format('MMMM Do, h:mm a')}/>
+          <Line type="monotone" dataKey="tankLvlsOk" stroke="#006400" fill="#006400" dot={<CustomizedDotOk color="#006400"/>} />  
+          <Line type="monotone" dataKey="warnLvls" stroke="#FACF50" fill="#FACF50" dot={<CustomizedDotOk color="#FACF50"/>} />                  
           <Line type="monotone" dataKey="emergLvls" stroke="#ff0000" fill="#ff0000" dot={<CustomizedDotBad color="#ff0000"/>} />
-          <Line type="monotone" dataKey="warnLvls" stroke="#FACF50" fill="#FACF50" dot={<CustomizedDotOk color="#FACF50"/>} />
-          <Line type="monotone" dataKey="tankLvlsOk" stroke="#00ff00" fill="#00ff00" dot={<CustomizedDotOk color="#00ff00"/>} />
+          <Line type="monotone" dataKey="errorLvls" stroke="#6a0dad" fill="#6a0dad" dot={<CustomizedDotBad color="#6a0dad"/>} />
+
           <Line type="monotone" dataKey="tankComSuc" stroke="#964B00" fill="#964B00" dot={<CustomizedDotComms color="#964B00"/>} />
-          <Line type="monotone" dataKey="baseNoInternet" stroke="#fff" fill="#fff" dot={<CustomizedDotComms color="#fff"/>} />
-          <Brush travellerWidth={20}/>
+          <Line type="monotone" dataKey="internetSuc" stroke="#000000" fill="#000000" dot={<CustomizedDotComms color="#000000"/>} />
+          <Brush travellerWidth={20} />
         </LineChart>
 
         <h4 css={Styles.middle}>Raw Tank Levels</h4>
         <LineChart
           width={this.state.width}
           height={200}
-          data={dataForm}
+          data={this.state.data}
           syncId="anyId"
-          margin={{
-            top: 10, right: 30, left: 0, bottom: 0,
-          }}
+          margin={{ top: 10, right: 90, left: 30, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="lastNetwrkTimeMeas" tickFormatter={ e => moment(e, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a')}/>
+          <XAxis dataKey="lastNetwrkTimeMeas" tickFormatter={ e => moment(e, "YY-MM-DD-HH-mm-ss").format('MMMM Do, h:mm a')}/>
           <YAxis type="number" domain={[-1,1]}  allowDecimals={false}/>
-          <Tooltip labelFormatter={ e => moment(e, "YY-MM-DD-hh-mm-ss").format('MMMM Do, h:mm a')}/>
-          <Line type="monotone" dataKey="lowLvl" stroke="#ff0000" fill="#ff0000" />
+          <Tooltip labelFormatter={ e => moment(e, "YY-MM-DD-HH-mm-ss").format('MMMM Do, h:mm a')}/>
+          <Line type="monotone" dataKey="highLvl" stroke="#006400" fill="#006400"/>            
           <Line type="monotone" dataKey="medLvl" stroke="#FACF50" fill="#FACF50" />
-          <Line type="monotone" dataKey="highLvl" stroke="#00ff00" fill="#00ff00"/>
+          <Line type="monotone" dataKey="lowLvl" stroke="#ff0000" fill="#ff0000" />
         </LineChart>
+        <h4 css={Styles.middle}>{`Date & Time Now: ${moment().format('MMMM Do, h:mm a')}`}</h4>
       </div>
     );
   }
@@ -153,8 +188,3 @@ const CustomizedDotComms = ({cx, cy, stroke, payload, value, color} : any ) => {
   }
   return null;
 };
-
-//Last task is to get all the times the tank couldnt communicate.
-//--> call it baseNoInternet.
-//use time periods to work this out
-//Change to 2 hour mode when at farm!
