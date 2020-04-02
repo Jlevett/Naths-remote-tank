@@ -17,9 +17,10 @@ const App = () => {
   return(
     <div className="App">
       <Router>
-        <Switch>
-          <Route exact path="/" component={RightNow} />
-          <Route exact path="/graph" component={Graph} />
+        <Switch> 
+          <Route path="/graph" component={Graph} />
+          <Route path="/" component={RightNow} />
+         
           <Route component={PageNotFound} />  
         </Switch>  
         <div css={styles.fixed}>
